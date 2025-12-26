@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}{{ person.first_name if person else 'Add Person' }} - Personal CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>
+                    {% if person %}
+                        <i class="bi bi-person-circle"></i> {{ person.first_name }} {{ person.last_name or '' }}
+                    {% else %}
+                        <i class="bi bi-person-plus-fill"></i> Add New Person
+                    {% endif %}
+                </h1>
+                <p class="text-muted">Complete personal information management</p>
+            </div>
+            {% if person %}
+            <div>
+                <a href="{{ url_for('people_list') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-badge"></i> Personal Information
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <form method="POST" 
+                      action="{% if person %}{{ url_for('person_edit', person_id=person.id) }}{% else %}{{ url_for('person_add') }}{% endif %}"
+                      id="personForm">
+                    
+                    <!-- SECTION 1: Basic Identity -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-person-vcard"></i> Basic Identity
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-2">
+                            <label class="form-label">Prefix</label>
+                            <select class="form-select" name="prefix">
+                                <option value="">None</option>
+                                <option value="Mr" {% if person and person.prefix == 'Mr' %}selected{% endif %}>Mr</option>
+                                <option value="Mrs" {% if person and person.prefix == 'Mrs' %}selected{% endif %}>Mrs</option>
+                                <option value="Ms" {% if person and person.prefix == 'Ms' %}selected{% endif %}>Ms</option>
+                                <option value="Dr" {% if person and person.prefix == 'Dr' %}selected{% endif %}>Dr</option>
+                                <option value="Prof" {% if person and person.prefix == 'Prof' %}selected{% endif %}>Prof</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-control" name="first_name" 
+                                   value="{{ person.first_name if person else '' }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Middle Name</label>
+                            <input type="text" class="form-control" name="middle_name" 
+                                   value="{{ person.middle_name if person else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" 
+                                   value="{{ person.last_name if person else '' }}">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Maiden Name</label>
+                            <input type="text" class="form-control" name="maiden_name" 
+                                   value="{{ person.maiden_name if person else '' }}"
+                                   placeholder="Previous surname">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nickname</label>
+                            <input type="text" class="form-control" name="nickname" 
+                                   value="{{ person.nickname if person else '' }}"
+                                   placeholder="What you call them">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Pronouns</label>
+                            <input type="text" class="form-control" name="pronouns" 
+                                   value="{{ person.pronouns if person else '' }}"
+                                   placeholder="He/Him, She/Her, They/Them">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Personal Details -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-calendar-heart"></i> Personal Details
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label">Gender</label>
+                            <select class="form-select" name="gender">
+                                <option value="">Select...</option>
+                                <option value="Male" {% if person and person.gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if person and person.gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Non-binary" {% if person and person.gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+                                <option value="Other" {% if person and person.gender == 'Other' %}selected{% endif %}>Other</option>
+                                <option value="Prefer not to say" {% if person and person.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" name="dob" 
+                                   value="{{ person.dob if person else '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Blood Group</label>
+                            <select class="form-select" name="blood_group">
+                                <option value="">Select...</option>
+                                {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                                <option value="{{ bg }}" {% if person and person.blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Nationality</label>
+                            <input type="text" class="form-control" name="nationality" 
+                                   value="{{ person.nationality if person else '' }}"
+                                   placeholder="Indian, American, etc.">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Contact Information -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-telephone"></i> Contact Information
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Primary Phone</label>
+                            <input type="tel" class="form-control" name="primary_phone" 
+                                   value="{{ person.primary_phone if person else '' }}"
+                                   placeholder="+91-9876543210">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Primary Email</label>
+                            <input type="email" class="form-control" name="primary_email" 
+                                   value="{{ person.primary_email if person else '' }}"
+                                   placeholder="email@example.com">
+                        </div>
+                    </div>
+
+                    {% if not person %}
+                    <!-- Additional Contacts Section (for new person) -->
+                    <div class="mb-3">
+                        <label class="form-label">Additional Contacts</label>
+                        <div id="additional-contacts">
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <select class="form-select form-select-sm" name="contact_type[]">
+                                        <option value="">Type...</option>
+                                        <option value="mobile">Mobile</option>
+                                        <option value="home">Home Phone</option>
+                                        <option value="work">Work Phone</option>
+                                        <option value="email">Email</option>
+                                        <option value="whatsapp">WhatsApp</option>
+                                        <option value="telegram">Telegram</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="text" class="form-control form-control-sm" 
+                                           name="contact_value[]" placeholder="Value">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control form-control-sm" 
+                                           name="contact_label[]" placeholder="Label (Personal/Work)">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="addContactRow()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- SECTION 4: Location -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-geo-alt"></i> Location
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Current City</label>
+                            <input type="text" class="form-control" name="current_city" 
+                                   value="{{ person.current_city if person else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Current Country</label>
+                            <input type="text" class="form-control" name="current_country" 
+                                   value="{{ person.current_country if person else '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Hometown</label>
+                            <input type="text" class="form-control" name="hometown" 
+                                   value="{{ person.hometown if person else '' }}"
+                                   placeholder="Where they're originally from">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: Professional -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-briefcase"></i> Professional Information
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Occupation</label>
+                            <input type="text" class="form-control" name="occupation" 
+                                   value="{{ person.occupation if person else '' }}"
+                                   placeholder="Software Engineer, Doctor, etc.">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company</label>
+                            <input type="text" class="form-control" name="company" 
+                                   value="{{ person.company if person else '' }}"
+                                   placeholder="Current employer">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: Groups/Circles -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-people"></i> Groups & Circles
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Assign to Groups (select multiple)</label>
+                            <select class="form-select" name="group_ids" multiple size="4">
+                                {% for group in all_groups %}
+                                <option value="{{ group.id }}" 
+                                    {% if person and groups %}
+                                        {% for pg in groups %}
+                                            {% if pg.id == group.id %}selected{% endif %}
+                                        {% endfor %}
+                                    {% endif %}>
+                                    {{ group.name }} - {{ group.description or 'No description' }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple groups</small>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 7: Personal Preferences -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-heart"></i> Personal Preferences & Interests
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Diet Preference</label>
+                            <input type="text" class="form-control" name="diet" 
+                                   value="{{ person.attributes.diet if person and person.attributes else '' }}" 
+                                   placeholder="Vegetarian, Vegan, etc.">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Hobbies</label>
+                            <input type="text" class="form-control" name="hobbies" 
+                                   value="{{ person.attributes.hobbies if person and person.attributes else '' }}" 
+                                   placeholder="Photography, Reading, etc.">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Languages</label>
+                            <input type="text" class="form-control" name="languages" 
+                                   value="{{ person.attributes.languages if person and person.attributes else '' }}" 
+                                   placeholder="English, Hindi, Tamil">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label">Skills</label>
+                            <input type="text" class="form-control" name="skills" 
+                                   value="{{ person.attributes.skills if person and person.attributes else '' }}" 
+                                   placeholder="Programming, Cooking, Photography">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 8: Social Media -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-share"></i> Social Media Handles
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-instagram text-danger"></i> Instagram</label>
+                            <input type="text" class="form-control" name="instagram" 
+                                   value="{{ person.attributes.social_handles.instagram if person and person.attributes and person.attributes.social_handles else '' }}" 
+                                   placeholder="@username">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-linkedin text-primary"></i> LinkedIn</label>
+                            <input type="text" class="form-control" name="linkedin" 
+                                   value="{{ person.attributes.social_handles.linkedin if person and person.attributes and person.attributes.social_handles else '' }}" 
+                                   placeholder="Profile URL">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-twitter text-info"></i> Twitter/X</label>
+                            <input type="text" class="form-control" name="twitter" 
+                                   value="{{ person.attributes.social_handles.twitter if person and person.attributes and person.attributes.social_handles else '' }}" 
+                                   placeholder="@username">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label"><i class="bi bi-github"></i> GitHub</label>
+                            <input type="text" class="form-control" name="github" 
+                                   value="{{ person.attributes.social_handles.github if person and person.attributes and person.attributes.social_handles else '' }}" 
+                                   placeholder="@username">
+                        </div>
+                    </div>
+
+                    <!-- SECTION 9: Notes -->
+                    <h5 class="border-bottom pb-2 mb-3 text-primary">
+                        <i class="bi bi-journal-text"></i> Bio & Notes
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control" name="bio" rows="2" 
+                                      placeholder="Brief description about the person">{{ person.bio if person else '' }}</textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Personal Notes</label>
+                            <textarea class="form-control" name="notes" rows="3" 
+                                      placeholder="Any important notes, memories, or reminders">{{ person.notes if person else '' }}</textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> {% if person %}Update Person{% else %}Create Person{% endif %}
+                        </button>
+                        <a href="{{ url_for('people_list') }}" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if person %}
+        <!-- ========================================== -->
+        <!-- RELATIONSHIPS SECTION (ONLY FOR EXISTING PERSON) -->
+        <!-- ========================================== -->
+        <div class="card shadow-sm mb-4 border-warning">
+            <div class="card-header bg-warning">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-diagram-3-fill"></i> Relationships 
+                        <span class="badge bg-dark">{{ relationships|length }}</span>
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-dark" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#addRelationshipModal">
+                        <i class="bi bi-plus-circle"></i> Add Relationship
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if relationships %}
+                <div class="list-group list-group-flush">
+                    {% for rel in relationships %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ rel.related_person_name }}</strong>
+                                <span class="badge bg-primary ms-2">{{ rel.relationship_type }}</span>
+                                {% if rel.meeting_date %}
+                                <small class="text-muted ms-2"><i class="bi bi-calendar3"></i> Since {{ rel.meeting_date }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="btn-group">
+                                <a href="{{ url_for('person_detail', person_id=rel.related_person_id) }}" 
+                                   class="btn btn-sm btn-outline-primary" title="View Person">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="POST" 
+                                      action="{{ url_for('relationship_delete', relationship_id=rel.id) }}" 
+                                      style="display:inline;"
+                                      onsubmit="return confirm('Delete this relationship?');">
+                                    <input type="hidden" name="person_id" value="{{ person.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% if rel.meeting_context %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-chat-left-text"></i> {{ rel.meeting_context }}
+                        </small>
+                        {% endif %}
+                        {% if rel.notes %}
+                        <small class="text-muted d-block mt-1">
+                            <i class="bi bi-sticky"></i> {{ rel.notes }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info text-center mb-0">
+                    <i class="bi bi-info-circle fs-4"></i>
+                    <p class="mt-2 mb-0">No relationships recorded yet. Click "Add Relationship" to start building the social graph!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Add Relationship Modal -->
+        <div class="modal fade" id="addRelationshipModal" tabindex="-1" aria-labelledby="addRelationshipModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning">
+                        <h5 class="modal-title" id="addRelationshipModalLabel">
+                            <i class="bi bi-person-plus-fill"></i> Add Relationship for {{ person.first_name }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('relationship_add', person_id=person.id) }}">
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb"></i> <strong>Tip:</strong> Select who <strong>{{ person.first_name }}</strong> is related to and what type of relationship they have.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Related Person *</label>
+                                <select class="form-select" name="related_person_id" required>
+                                    <option value="">-- Select person --</option>
+                                    {% for p in all_people %}
+                                    <option value="{{ p.id }}">{{ p.first_name }} {{ p.last_name or '' }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Choose who this person is related to</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">{{ person.first_name }} is their: *</label>
+                                    <select class="form-select" name="relationship_type" required>
+                                        <option value="">-- Select --</option>
+                                        {% for rel_type in config.RELATIONSHIP_TYPES %}
+                                        <option value="{{ rel_type }}">{{ rel_type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">They are {{ person.first_name }}'s: (Optional)</label>
+                                    <select class="form-select" name="reverse_relationship_type">
+                                        <option value="">-- Select --</option>
+                                        {% for rel_type in config.RELATIONSHIP_TYPES %}
+                                        <option value="{{ rel_type }}">{{ rel_type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="text-muted">E.g., if they're Father, you might be Son/Daughter</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Meeting Date</label>
+                                <input type="date" class="form-control" name="meeting_date">
+                                <small class="text-muted">When did {{ person.first_name }} first meet this person?</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">How did they meet?</label>
+                                <textarea class="form-control" name="meeting_context" rows="2" 
+                                          placeholder="E.g., At college orientation, Through mutual friend..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Additional Notes</label>
+                                <textarea class="form-control" name="notes" rows="2" 
+                                          placeholder="Any important details about this relationship..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i> Add Relationship
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Events Card -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-event"></i> Recent Events Together 
+                    <span class="badge bg-dark">{{ events|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if events %}
+                <div class="list-group list-group-flush">
+                    {% for event in events %}
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" 
+                       class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ event.title }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt"></i> {{ event.place_name }}
+                                </small>
+                            </div>
+                            <small class="text-muted">{{ event.start_datetime[:10] }}</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3 mb-0">No events recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addContactRow() {
+    const container = document.getElementById('additional-contacts');
+    const newRow = document.createElement('div');
+    newRow.className = 'row g-2 mb-2';
+    newRow.innerHTML = `
+        <div class="col-md-3">
+            <select class="form-select form-select-sm" name="contact_type[]">
+                <option value="">Type...</option>
+                <option value="mobile">Mobile</option>
+                <option value="home">Home Phone</option>
+                <option value="work">Work Phone</option>
+                <option value="email">Email</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="telegram">Telegram</option>
+            </select>
+        </div>
+        <div class="col-md-5">
+            <input type="text" class="form-control form-control-sm" name="contact_value[]" placeholder="Value">
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control form-control-sm" name="contact_label[]" placeholder="Label">
+        </div>
+        <div class="col-md-1">
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.remove()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(newRow);
+}
+
+// Debug: Log when page loads to confirm relationship section exists
+document.addEventListener('DOMContentLoaded', function() {
+    const relationshipModal = document.getElementById('addRelationshipModal');
+    if (relationshipModal) {
+        console.log('✓ Relationship modal loaded successfully');
+    } else {
+        console.log('✗ Relationship modal NOT found - person might not exist yet');
+    }
+});
+</script>
+{% endblock %}

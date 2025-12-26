@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Personal CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-search"></i> Search Results</h1>
+        {% if query %}
+        <p class="text-muted">Showing results for: <strong>"{{ query }}"</strong></p>
+        {% else %}
+        <p class="text-muted">Enter a search term to find people, places, or events</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if query %}
+<!-- People Results -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-people"></i> People ({{ results.people|length }})</h5>
+    </div>
+    <div class="card-body">
+        {% if results.people %}
+        <div class="list-group">
+            {% for person in results.people %}
+            <a href="{{ url_for('person_detail', person_id=person.id) }}" 
+               class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ person.first_name }} {{ person.last_name or '' }}</strong>
+                    <small class="text-muted">{{ person.occupation or 'No occupation' }}</small>
+                </div>
+                <small class="text-muted">{{ person.current_city or '' }}</small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No people found</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Places Results -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Places ({{ results.places|length }})</h5>
+    </div>
+    <div class="card-body">
+        {% if results.places %}
+        <div class="list-group">
+            {% for place in results.places %}
+            <a href="{{ url_for('place_detail', place_id=place.id) }}" 
+               class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ place.name }}</strong>
+                    <span class="badge bg-secondary">{{ place.type }}</span>
+                </div>
+                <small class="text-muted">{{ place.city or '' }}{{ ', ' if place.city and place.country else '' }}{{ place.country or '' }}</small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No places found</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Events Results -->
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Events ({{ results.events|length }})</h5>
+    </div>
+    <div class="card-body">
+        {% if results.events %}
+        <div class="list-group">
+            {% for event in results.events %}
+            <a href="{{ url_for('event_detail', event_id=event.id) }}" 
+               class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ event.title }}</strong>
+                    <small class="text-muted">{{ event.start_datetime[:10] }}</small>
+                </div>
+                <small class="text-muted">{{ event.event_type }}</small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center">No events found</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

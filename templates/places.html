@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Places - Personal CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1><i class="bi bi-geo-alt-fill"></i> Places</h1>
+        <p class="text-muted">Track locations you've visited or want to visit</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('place_add') }}" class="btn btn-success">
+            <i class="bi bi-geo-alt-fill"></i> Add Place
+        </a>
+    </div>
+</div>
+
+{% if places %}
+<div class="row g-4">
+    {% for place in places %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 place-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">
+                        <a href="{{ url_for('place_detail', place_id=place.id) }}" 
+                           class="text-decoration-none text-dark">
+                            {{ place.name }}
+                        </a>
+                    </h5>
+                    {% if place.my_rating %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-star-fill"></i> {{ place.my_rating }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <p class="mb-1">
+                    <span class="badge bg-secondary">{{ place.type }}</span>
+                </p>
+                
+                {% if place.city or place.country %}
+                <p class="mb-1">
+                    <i class="bi bi-geo-alt text-muted"></i> 
+                    {{ place.city }}{{ ', ' if place.city and place.country else '' }}{{ place.country }}
+                </p>
+                {% endif %}
+                
+                {% if place.latitude and place.longitude %}
+                <p class="mb-1">
+                    <i class="bi bi-pin-map text-muted"></i> 
+                    {{ "%.4f"|format(place.latitude) }}, {{ "%.4f"|format(place.longitude) }}
+                </p>
+                {% endif %}
+                
+                <p class="mb-2">
+                    <span class="badge bg-{% if place.visit_status == 'Visited' %}success{% elif place.visit_status == 'Wishlist' %}info{% else %}secondary{% endif %}">
+                        {{ place.visit_status or 'Not Visited' }}
+                    </span>
+                </p>
+                
+                {% if place.description %}
+                <p class="card-text text-muted small">
+                    {{ place.description[:100] }}{{ '...' if place.description|length > 100 else '' }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100" role="group">
+                    <a href="{{ url_for('place_detail', place_id=place.id) }}" 
+                       class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="deletePlace({{ place.id }}, '{{ place.name }}')">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="bi bi-info-circle fs-1"></i>
+    <h4 class="mt-3">No places added yet</h4>
+    <p>Start documenting your favorite locations!</p>
+    <a href="{{ url_for('place_add') }}" class="btn btn-success">
+        <i class="bi bi-geo-alt-fill"></i> Add First Place
+    </a>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deletePlaceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="placeName"></strong>?</p>
+                <p class="text-danger"><small>This will also delete all events at this location.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deletePlaceForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deletePlace(placeId, placeName) {
+    document.getElementById('placeName').textContent = placeName;
+    document.getElementById('deletePlaceForm').action = `/places/${placeId}/delete`;
+    new bootstrap.Modal(document.getElementById('deletePlaceModal')).show();
+}
+</script>
+{% endblock %}
